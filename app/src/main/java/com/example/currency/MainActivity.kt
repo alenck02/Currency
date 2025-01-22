@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -139,7 +140,9 @@ fun NumberButtons() {
         fun createButton(text: String? = null, icon: Int? = null, onClick: () -> Unit) {
             Button(
                 onClick = onClick,
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+                modifier = Modifier.weight(1f)
+                    .fillMaxHeight()
+                    .border(0.5.dp, Color.White, shape = RectangleShape),
                 shape = RectangleShape,
                 colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
             ) {
