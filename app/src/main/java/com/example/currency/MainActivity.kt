@@ -127,6 +127,7 @@ fun CountrySelectionScreen(navController: NavHostController) {
             text = "화폐 변경",
             fontSize = 24.sp,
             textAlign = TextAlign.Center,
+            color = colorResource(id = R.color.skyBlue),
             modifier = Modifier.padding(vertical = 16.dp) .fillMaxWidth()
         )
 
@@ -169,8 +170,14 @@ fun CountryRow(countryName: String, currency: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = countryName, fontSize = 18.sp)
-        Text(text = currency, fontSize = 18.sp)
+        Text(
+            text = countryName,
+            fontSize = 18.sp,
+        )
+        Text(
+            text = currency,
+            fontSize = 18.sp,
+            )
     }
 }
 
