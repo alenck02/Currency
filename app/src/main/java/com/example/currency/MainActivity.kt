@@ -68,7 +68,7 @@ fun uiPreview(navController: NavHostController) {
         Divider()
         CountryItem("USD", navController, addTopPadding = false)
         currencyInfo()
-        numberBtn()
+        NumberButtons()
     }
 }
 
@@ -128,182 +128,59 @@ fun currencyInfo() {
 }
 
 @Composable
-fun numberBtn() {
+fun NumberButtons() {
     Column(
         modifier = Modifier.fillMaxHeight()
             .padding(bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
     ) {
         val rowModifier = Modifier.weight(1f)
 
-        Row(
-            modifier = Modifier.fillMaxWidth().then(rowModifier)
-        ) {
+        @Composable
+        fun createButton(text: String? = null, icon: Int? = null, onClick: () -> Unit) {
             Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
+                onClick = onClick,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 shape = RectangleShape,
                 colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
             ) {
-                Text(text = "7", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "8", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "9", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "C", fontSize = 24.sp)
+                if (icon != null) {
+                    Image(
+                        painter = painterResource(id = icon),
+                        contentDescription = text,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else if (text != null) {
+                    Text(text = text, fontSize = 24.sp)
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().then(rowModifier)
-        ) {
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "4", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "5", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "6", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.backspace),
-                    contentDescription = "Backspace",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
+        val buttonRows = listOf(
+            listOf("7", "8", "9", "C"),
+            listOf("4", "5", "6", R.drawable.backspace),
+            listOf("1", "2", "3", R.drawable.swap),
+            listOf("0", "00", ".", "=")
+        )
 
-        Row(
-            modifier = Modifier.fillMaxWidth().then(rowModifier)
-        ) {
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "1", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "2", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "3", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.swap),
-                    contentDescription = "Swap",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth().then(rowModifier)
-        ) {
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "0", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "00", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = ".", fontSize = 24.sp)
-            }
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f)
-                    .fillMaxHeight(),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-            ) {
-                Text(text = "=", fontSize = 24.sp)
+        buttonRows.forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth().then(rowModifier)) {
+                row.forEach { item ->
+                    when (item) {
+                        is String -> createButton(text = item) {
+                            when (item) {
+                                "C" -> {
+                                    println("Clear action")
+                                }
+                                else -> {
+                                    println("$item clicked")
+                                }
+                            }
+                        }
+                        is Int -> createButton(icon = item) {
+                            println("Icon clicked")
+                        }
+                    }
+                }
             }
         }
     }
@@ -318,7 +195,7 @@ fun PreviewCountryItems() {
             Divider()
             CountryItem("USD", rememberNavController(), addTopPadding = false)
             currencyInfo()
-            numberBtn()
+            NumberButtons()
         }
     }
 }
