@@ -123,7 +123,7 @@ fun currencyInfo() {
         fontSize = 16.sp,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth()
-            .background(Color.LightGray)
+            .background(colorResource(id = R.color.snow))
     )
 }
 
