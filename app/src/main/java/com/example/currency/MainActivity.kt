@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -116,36 +117,43 @@ fun CountrySelectionScreen(navController: NavHostController) {
             .padding(horizontal = 16.dp)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
-        Button(
-            onClick = { navController.popBackStack() },
-            colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
-        ) {
-            Text(text = "뒤로가기")
+        Row {
+            var lastClickTime by remember { mutableStateOf(0L) }
+
+            Button(
+                onClick = {
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastClickTime > 1000) {
+                        lastClickTime = currentTime
+                        navController.popBackStack()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(Color.Transparent),
+                modifier = Modifier.wrapContentSize()
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.back),
+                    contentDescription = "backToMain"
+                )
+            }
+
+            var searchQuery by remember { mutableStateOf("") }
+
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("국가 검색", color = Color.White) },
+                colors = TextFieldDefaults.textFieldColors(
+                    cursorColor = Color.White,
+                    focusedTextColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    containerColor = colorResource(id = R.color.skyBlue)
+                ),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-
-        Text(
-            text = "화폐 변경",
-            fontSize = 24.sp,
-            textAlign = TextAlign.Center,
-            color = colorResource(id = R.color.skyBlue),
-            modifier = Modifier.padding(vertical = 16.dp) .fillMaxWidth()
-        )
-
-        var searchQuery by remember { mutableStateOf("") }
-        TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("국가 검색", color = Color.White) },
-            colors = TextFieldDefaults.textFieldColors(
-                cursorColor = Color.White,
-                focusedTextColor = Color.White,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                containerColor = colorResource(id = R.color.skyBlue)
-            ),
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.fillMaxWidth()
-        )
 
         val countries = listOf(
             Pair("대한민국", "KRW"),
