@@ -20,11 +20,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -98,6 +108,7 @@ fun CountryItem(currency: String, navController: NavHostController, addTopPaddin
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CountrySelectionScreen(navController: NavHostController) {
     Column(
@@ -105,15 +116,61 @@ fun CountrySelectionScreen(navController: NavHostController) {
             .padding(horizontal = 16.dp)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
-        Text(text = "나라 선택 화면입니다.")
+        Button(
+            onClick = { navController.popBackStack() },
+            colors = ButtonDefaults.buttonColors(colorResource(id = R.color.skyBlue))
+        ) {
+            Text(text = "뒤로가기")
+        }
+
         Text(
-            text = "나라 선택 완료",
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .clickable {
-                    navController.popBackStack()
-                }
+            text = "화폐 변경",
+            fontSize = 24.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 16.dp) .fillMaxWidth()
         )
+
+        var searchQuery by remember { mutableStateOf("") }
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("국가 검색", color = Color.White) },
+            colors = TextFieldDefaults.textFieldColors(
+                cursorColor = Color.White,
+                focusedTextColor = Color.White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                containerColor = colorResource(id = R.color.skyBlue)
+            ),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        val countries = listOf(
+            Pair("대한민국", "KRW"),
+            Pair("미국", "USD"),
+        )
+
+        LazyColumn {
+            items(countries) { country ->
+                CountryRow(country.first, country.second)
+            }
+        }
+    }
+}
+
+@Composable
+fun CountryRow(countryName: String, currency: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { /* 선택 시 동작 */ },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = countryName, fontSize = 18.sp)
+        Text(text = currency, fontSize = 18.sp)
     }
 }
 
