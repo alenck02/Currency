@@ -7,9 +7,6 @@ class CurrencyViewModel : ViewModel() {
     var currencies = mutableStateOf(listOf("KRW", "USD"))
         private set
 
-    var selectedCurrency = mutableStateOf("")
-        private set
-
     fun updateCurrency(oldCurrency: String, newCurrency: String) {
         currencies.value = currencies.value.map { if (it == oldCurrency) newCurrency else it }
     }

@@ -93,7 +93,7 @@ fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
             }
         }
         currencyInfo()
-        NumberButtons(viewModel)
+        NumberButtons()
     }
 }
 
@@ -233,7 +233,7 @@ fun currencyInfo() {
 }
 
 @Composable
-fun NumberButtons(viewModel: CurrencyViewModel) {
+fun NumberButtons() {
     Column(
         modifier = Modifier.fillMaxHeight()
             .padding(bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
@@ -284,17 +284,6 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                             }
                         }
                         is Int -> createButton(icon = item) {
-                            when (item) {
-                                R.drawable.swap -> {
-                                    val currentCurrency = viewModel.selectedCurrency.value
-                                    val replaceIndex = viewModel.currencies.value.indexOf(currentCurrency)
-                                    if (replaceIndex != -1) {
-                                        viewModel.swapCurrencies(replaceIndex.toString(),
-                                            0.toString()
-                                        )
-                                    }
-                                }
-                            }
                             println("Icon clicked")
                         }
                     }
