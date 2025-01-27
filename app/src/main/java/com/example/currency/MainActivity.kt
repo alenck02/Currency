@@ -1,6 +1,7 @@
 package com.example.currency
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,46 +47,58 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.currency.ViewModel.CurrencyViewModel
 import com.example.currency.ui.theme.CurrencyTheme
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
+    private val currencyViewModel = CurrencyViewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             CurrencyTheme {
-                AppNavigation()
+                AppNavigation(currencyViewModel)
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(viewModel: CurrencyViewModel) {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "main") {
-        composable("main") { uiPreview(navController) }
-        composable("countrySelection") { CountrySelectionScreen(navController) }
+        composable("main") { uiPreview(navController, viewModel) }
+        composable("countrySelection/{currencyToReplace}") { backStackEntry ->
+            val currencyToReplace = backStackEntry.arguments?.getString("currencyToReplace") ?: "KRW"
+            CountrySelectionScreen(navController, viewModel, currencyToReplace)
+        }
     }
 }
 
 @Composable
-fun uiPreview(navController: NavHostController) {
+fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
     Column {
-        CountryItem("KRW", navController, addTopPadding = true)
-        Divider()
-        CountryItem("USD", navController, addTopPadding = false)
+        viewModel.currencies.value.forEachIndexed { index, currency ->
+            CountryItem(currency, navController, viewModel, addTopPadding = index == 0)
+
+            if (index < viewModel.currencies.value.size - 1) {
+                Divider()
+            }
+        }
         currencyInfo()
-        NumberButtons()
+        NumberButtons(viewModel)
     }
 }
 
 @Composable
-fun CountryItem(currency: String, navController: NavHostController, addTopPadding: Boolean) {
+fun CountryItem(currency: String, navController: NavHostController, viewModel: CurrencyViewModel, addTopPadding: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .background(Color.White)
@@ -94,7 +107,7 @@ fun CountryItem(currency: String, navController: NavHostController, addTopPaddin
                 top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             ) else Modifier)
             .height(140.dp)
-            .clickable { navController.navigate("countrySelection") },
+            .clickable { navController.navigate("countrySelection/$currency") },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -111,7 +124,7 @@ fun CountryItem(currency: String, navController: NavHostController, addTopPaddin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CountrySelectionScreen(navController: NavHostController) {
+fun CountrySelectionScreen(navController: NavHostController, viewModel: CurrencyViewModel, currencyToReplace: String) {
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -158,23 +171,42 @@ fun CountrySelectionScreen(navController: NavHostController) {
         val countries = listOf(
             Pair("대한민국", "KRW"),
             Pair("미국", "USD"),
+            Pair("캐나다", "CAD"),
+            Pair("일본", "JPY"),
+            Pair("유로", "EUR")
         )
 
         LazyColumn {
             items(countries) { country ->
-                CountryRow(country.first, country.second)
+                CountryRow(country.first, country.second) {
+                    if (viewModel.canSwap(country.second)) {
+                        viewModel.swapCurrencies(currencyToReplace, country.second)
+                        navController.popBackStack()
+                    } else {
+                        viewModel.updateCurrency(currencyToReplace, country.second)
+                        navController.popBackStack()
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun CountryRow(countryName: String, currency: String) {
+fun CountryRow(countryName: String, currency: String, onClick: () -> Unit) {
+    var lastClickTime by remember { mutableStateOf(0L) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { /* 선택 시 동작 */ },
+            .clickable {
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastClickTime > 1000) {
+                    lastClickTime = currentTime
+                    onClick()
+                }
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -185,7 +217,7 @@ fun CountryRow(countryName: String, currency: String) {
         Text(
             text = currency,
             fontSize = 18.sp,
-            )
+        )
     }
 }
 
@@ -201,7 +233,7 @@ fun currencyInfo() {
 }
 
 @Composable
-fun NumberButtons() {
+fun NumberButtons(viewModel: CurrencyViewModel) {
     Column(
         modifier = Modifier.fillMaxHeight()
             .padding(bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
@@ -252,25 +284,22 @@ fun NumberButtons() {
                             }
                         }
                         is Int -> createButton(icon = item) {
+                            when (item) {
+                                R.drawable.swap -> {
+                                    val currentCurrency = viewModel.selectedCurrency.value
+                                    val replaceIndex = viewModel.currencies.value.indexOf(currentCurrency)
+                                    if (replaceIndex != -1) {
+                                        viewModel.swapCurrencies(replaceIndex.toString(),
+                                            0.toString()
+                                        )
+                                    }
+                                }
+                            }
                             println("Icon clicked")
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCountryItems() {
-    CurrencyTheme {
-        Column {
-            CountryItem("KRW", rememberNavController(), addTopPadding = true)
-            Divider()
-            CountryItem("USD", rememberNavController(), addTopPadding = false)
-            currencyInfo()
-            NumberButtons()
         }
     }
 }
