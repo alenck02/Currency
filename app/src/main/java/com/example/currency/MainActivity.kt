@@ -85,20 +85,28 @@ fun AppNavigation(viewModel: CurrencyViewModel) {
 @Composable
 fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
     Column {
-        viewModel.currencies.value.forEachIndexed { index, currency ->
+        val currencies = viewModel.currencies.value
+
+        if (currencies.isNotEmpty()) {
+            viewModel.setSelectedCurrency(currencies.first())
+        }
+
+        currencies.forEachIndexed { index, currency ->
             CountryItem(currency, navController, viewModel, addTopPadding = index == 0)
 
-            if (index < viewModel.currencies.value.size - 1) {
+            if (index < currencies.size - 1) {
                 Divider()
             }
         }
         currencyInfo()
-        NumberButtons()
+        NumberButtons(viewModel)
     }
 }
 
 @Composable
 fun CountryItem(currency: String, navController: NavHostController, viewModel: CurrencyViewModel, addTopPadding: Boolean) {
+    val currencyValue = viewModel.currencyValues.value[currency] ?: "0"
+
     Row(
         modifier = Modifier.fillMaxWidth()
             .background(Color.White)
@@ -116,7 +124,7 @@ fun CountryItem(currency: String, navController: NavHostController, viewModel: C
             fontSize = 24.sp
         )
         Text(
-            text = "0",
+            text = currencyValue,
             fontSize = 24.sp
         )
     }
@@ -233,7 +241,7 @@ fun currencyInfo() {
 }
 
 @Composable
-fun NumberButtons() {
+fun NumberButtons(viewModel: CurrencyViewModel) {
     Column(
         modifier = Modifier.fillMaxHeight()
             .padding(bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
@@ -274,12 +282,18 @@ fun NumberButtons() {
                 row.forEach { item ->
                     when (item) {
                         is String -> createButton(text = item) {
+                            val selectedCurrency = viewModel.selectedCurrency.value
                             when (item) {
                                 "C" -> {
-                                    println("Clear action")
+                                    viewModel.updateCurrencyValue(selectedCurrency, "0")
+                                }
+                                "=" -> {
+                                    viewModel.updateCurrencyValue(selectedCurrency, "")
                                 }
                                 else -> {
-                                    println("$item clicked")
+                                    val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
+                                    val newValue = if (currentValue == "0") item else currentValue + item
+                                    viewModel.updateCurrencyValue(selectedCurrency, newValue)
                                 }
                             }
                         }
