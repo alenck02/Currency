@@ -98,7 +98,7 @@ fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
                 Divider()
             }
         }
-        currencyInfo()
+        currencyInfo(viewModel)
         NumberButtons(viewModel)
     }
 }
@@ -230,9 +230,38 @@ fun CountryRow(countryName: String, currency: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun currencyInfo() {
+fun currencyInfo(viewModel: CurrencyViewModel) {
+    val currencies = viewModel.currencies.value
+
+    val fromCurrency = currencies.getOrNull(0) ?: "KRW"
+    val toCurrency = currencies.getOrNull(1) ?: "USD"
+
+    val exchangeRate = when (fromCurrency to toCurrency) {
+        "KRW" to "USD" -> "0.00075"
+        "KRW" to "CAD" -> "0.00092"
+        "KRW" to "JPY" -> "0.084"
+        "KRW" to "EUR" -> "0.0007"
+        "USD" to "KRW" -> "1330"
+        "USD" to "CAD" -> "1.21"
+        "USD" to "JPY" -> "110"
+        "USD" to "EUR" -> "0.85"
+        "CAD" to "KRW" -> "1086"
+        "CAD" to "USD" -> "0.83"
+        "CAD" to "JPY" -> "90"
+        "CAD" to "EUR" -> "0.69"
+        "JPY" to "KRW" -> "11.9"
+        "JPY" to "USD" -> "0.0091"
+        "JPY" to "CAD" -> "0.011"
+        "JPY" to "EUR" -> "0.0076"
+        "EUR" to "KRW" -> "1428"
+        "EUR" to "USD" -> "1.18"
+        "EUR" to "CAD" -> "1.45"
+        "EUR" to "JPY" -> "131"
+        else -> "N/A"
+    }
+
     Text(
-        text = "1KRW = 0.00076USD",
+        text = "1$fromCurrency = $exchangeRate$toCurrency",
         fontSize = 16.sp,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth()
@@ -288,7 +317,8 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                                     viewModel.updateCurrencyValue(selectedCurrency, "0")
                                 }
                                 "=" -> {
-                                    viewModel.updateCurrencyValue(selectedCurrency, "")
+                                    val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
+                                    viewModel.updateCurrencyValue(selectedCurrency, currentValue)
                                 }
                                 else -> {
                                     val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
