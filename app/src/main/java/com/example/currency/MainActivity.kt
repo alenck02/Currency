@@ -328,7 +328,18 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                             }
                         }
                         is Int -> createButton(icon = item) {
-                            println("Icon clicked")
+                            val selectedCurrency = viewModel.selectedCurrency.value
+                            when (item) {
+                                R.drawable.backspace -> {
+                                    val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
+                                    val newValue = if (currentValue.length > 1) {
+                                        currentValue.dropLast(1)
+                                    } else {
+                                        "0"
+                                    }
+                                    viewModel.updateCurrencyValue(selectedCurrency, newValue)
+                                }
+                            }
                         }
                     }
                 }
