@@ -1,7 +1,6 @@
 package com.example.currency
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -44,7 +43,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,15 +52,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.currency.ViewModel.CurrencyViewModel
 import com.example.currency.ui.theme.CurrencyTheme
-import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
-    private val currencyViewModel = CurrencyViewModel()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val currencyViewModel: CurrencyViewModel = viewModel()
             CurrencyTheme {
                 AppNavigation(currencyViewModel)
             }
@@ -314,11 +310,12 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                             val selectedCurrency = viewModel.selectedCurrency.value
                             when (item) {
                                 "C" -> {
-                                    viewModel.updateCurrencyValue(selectedCurrency, "0")
+                                    viewModel.resetAllCurrencyValues()
                                 }
                                 "=" -> {
-                                    val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
-                                    viewModel.updateCurrencyValue(selectedCurrency, currentValue)
+                                    val fromCurrency = viewModel.currencies.value[0]
+                                    val toCurrency = viewModel.currencies.value[1]
+                                    viewModel.convertCurrency(fromCurrency, toCurrency)
                                 }
                                 else -> {
                                     val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
@@ -338,6 +335,13 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                                         "0"
                                     }
                                     viewModel.updateCurrencyValue(selectedCurrency, newValue)
+                                }
+                                R.drawable.swap -> {
+                                    if (viewModel.currencies.value.size >= 2) {
+                                        val firstCurrency = viewModel.currencies.value[0]
+                                        val secondCurrency = viewModel.currencies.value[1]
+                                        viewModel.swapCurrencies(firstCurrency, secondCurrency)
+                                    }
                                 }
                             }
                         }
