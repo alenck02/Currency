@@ -104,7 +104,8 @@ fun CountryItem(currency: String, navController: NavHostController, viewModel: C
     val currencyValue = viewModel.currencyValues.value[currency] ?: "0"
 
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .background(Color.White)
             .padding(start = 10.dp, end = 10.dp)
             .then(if (addTopPadding) Modifier.padding(
@@ -231,6 +232,7 @@ fun currencyInfo(viewModel: CurrencyViewModel) {
 
     val fromCurrency = currencies.getOrNull(0) ?: "KRW"
     val toCurrency = currencies.getOrNull(1) ?: "USD"
+    viewModel.convertCurrency(fromCurrency, toCurrency)
 
     val exchangeRate = when (fromCurrency to toCurrency) {
         "KRW" to "USD" -> "0.00075"
@@ -309,14 +311,8 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                         is String -> createButton(text = item) {
                             val selectedCurrency = viewModel.selectedCurrency.value
                             when (item) {
-                                "C" -> {
-                                    viewModel.resetAllCurrencyValues()
-                                }
-                                "=" -> {
-                                    val fromCurrency = viewModel.currencies.value[0]
-                                    val toCurrency = viewModel.currencies.value[1]
-                                    viewModel.convertCurrency(fromCurrency, toCurrency)
-                                }
+                                "C" -> viewModel.resetAllCurrencyValues()
+                                "=" -> viewModel.convertCurrency(viewModel.currencies.value[0], viewModel.currencies.value[1])
                                 else -> {
                                     val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
                                     val newValue = if (currentValue == "0") item else currentValue + item
@@ -329,19 +325,11 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                             when (item) {
                                 R.drawable.backspace -> {
                                     val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
-                                    val newValue = if (currentValue.length > 1) {
-                                        currentValue.dropLast(1)
-                                    } else {
-                                        "0"
-                                    }
+                                    val newValue = if (currentValue.length > 1) currentValue.dropLast(1) else "0"
                                     viewModel.updateCurrencyValue(selectedCurrency, newValue)
                                 }
-                                R.drawable.swap -> {
-                                    if (viewModel.currencies.value.size >= 2) {
-                                        val firstCurrency = viewModel.currencies.value[0]
-                                        val secondCurrency = viewModel.currencies.value[1]
-                                        viewModel.swapCurrencies(firstCurrency, secondCurrency)
-                                    }
+                                R.drawable.swap -> if (viewModel.currencies.value.size >= 2) {
+                                    viewModel.swapCurrencies(viewModel.currencies.value[0], viewModel.currencies.value[1])
                                 }
                             }
                         }
