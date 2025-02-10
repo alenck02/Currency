@@ -74,6 +74,7 @@ class CurrencyViewModel : ViewModel() {
         }
 
         exchangeRate?.let {
+            updateCurrencyValue(fromCurrency, "0")
             val fromValue = currencyValues.value.getOrDefault(fromCurrency, "0").toDoubleOrNull() ?: 0.0
             val convertedValue = fromValue * it
             updateCurrencyValue(toCurrency, String.format("%.2f", convertedValue))
