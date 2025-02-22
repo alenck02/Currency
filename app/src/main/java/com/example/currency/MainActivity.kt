@@ -135,6 +135,8 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
             .padding(horizontal = 16.dp)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
+        var searchQuery by remember { mutableStateOf("") }
+
         Row {
             var lastClickTime by remember { mutableStateOf(0L) }
 
@@ -154,8 +156,6 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
                     contentDescription = "backToMain"
                 )
             }
-
-            var searchQuery by remember { mutableStateOf("") }
 
             TextField(
                 value = searchQuery,
@@ -181,11 +181,16 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
             Pair("유로", "EUR")
         )
 
+        val filteredCountries = countries.filter { country ->
+            country.first.contains(searchQuery, ignoreCase = true)
+        }
+
         LazyColumn {
-            items(countries) { country ->
+            items(filteredCountries) { country ->
                 CountryRow(country.first, country.second) {
                     if (viewModel.canSwap(country.second)) {
                         viewModel.swapCurrencies(currencyToReplace, country.second)
+                        viewModel.updateCurrencyValue(viewModel.currencies.value[0], "0")
                         navController.popBackStack()
                     } else {
                         viewModel.updateCurrency(currencyToReplace, country.second)
@@ -330,6 +335,7 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                                 }
                                 R.drawable.swap -> if (viewModel.currencies.value.size >= 2) {
                                     viewModel.swapCurrencies(viewModel.currencies.value[0], viewModel.currencies.value[1])
+                                    viewModel.updateCurrencyValue(viewModel.currencies.value[0], "0")
                                 }
                             }
                         }
