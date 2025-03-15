@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -103,6 +104,9 @@ fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
 fun CountryItem(currency: String, navController: NavHostController, viewModel: CurrencyViewModel, addTopPadding: Boolean) {
     val currencyValue = viewModel.currencyValues.value[currency] ?: "0"
 
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val itemHeight = screenHeight * 0.2f
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,18 +115,18 @@ fun CountryItem(currency: String, navController: NavHostController, viewModel: C
             .then(if (addTopPadding) Modifier.padding(
                 top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             ) else Modifier)
-            .height(140.dp)
+            .height(itemHeight)
             .clickable { navController.navigate("countrySelection/$currency") },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = currency,
-            fontSize = 24.sp
+            fontSize = 28.sp
         )
         Text(
             text = currencyValue,
-            fontSize = 24.sp
+            fontSize = 28.sp
         )
     }
 }
