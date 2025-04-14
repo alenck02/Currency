@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,6 +83,10 @@ fun AppNavigation(viewModel: CurrencyViewModel) {
 
 @Composable
 fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
+    LaunchedEffect(Unit) {
+        viewModel.fetchLiveRates("USD")
+    }
+
     Column {
         val currencies = viewModel.currencies.value
 
@@ -134,13 +140,15 @@ fun CountryItem(currency: String, navController: NavHostController, viewModel: C
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CountrySelectionScreen(navController: NavHostController, viewModel: CurrencyViewModel, currencyToReplace: String) {
+    val countryList by viewModel.availableCountries.collectAsState()
+
+    var searchQuery by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
-        var searchQuery by remember { mutableStateOf("") }
-
         Row {
             var lastClickTime by remember { mutableStateOf(0L) }
 
@@ -177,27 +185,19 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
             )
         }
 
-        val countries = listOf(
-            Pair("대한민국", "KRW"),
-            Pair("미국", "USD"),
-            Pair("캐나다", "CAD"),
-            Pair("일본", "JPY"),
-            Pair("유로", "EUR")
-        )
-
-        val filteredCountries = countries.filter { country ->
-            country.first.contains(searchQuery, ignoreCase = true)
-        }
+        val filteredCountries = countryList
+            .filter { it.contains(searchQuery, ignoreCase = true) }
+            .sorted()
 
         LazyColumn {
-            items(filteredCountries) { country ->
-                CountryRow(country.first, country.second) {
-                    if (viewModel.canSwap(country.second)) {
-                        viewModel.swapCurrencies(currencyToReplace, country.second)
+            items(filteredCountries) { currencyCode ->
+                CountryRow(currencyCode, currencyCode) {
+                    if (viewModel.canSwap(currencyCode)) {
+                        viewModel.swapCurrencies(currencyToReplace, currencyCode)
                         viewModel.updateCurrencyValue(viewModel.currencies.value[0], "0")
                         navController.popBackStack()
                     } else {
-                        viewModel.updateCurrency(currencyToReplace, country.second)
+                        viewModel.updateCurrency(currencyToReplace, currencyCode)
                         navController.popBackStack()
                     }
                 }
@@ -241,37 +241,21 @@ fun currencyInfo(viewModel: CurrencyViewModel) {
 
     val fromCurrency = currencies.getOrNull(0) ?: "KRW"
     val toCurrency = currencies.getOrNull(1) ?: "USD"
-    viewModel.convertCurrency(fromCurrency, toCurrency)
 
-    val exchangeRate = when (fromCurrency to toCurrency) {
-        "KRW" to "USD" -> "0.00075"
-        "KRW" to "CAD" -> "0.00092"
-        "KRW" to "JPY" -> "0.084"
-        "KRW" to "EUR" -> "0.0007"
-        "USD" to "KRW" -> "1330"
-        "USD" to "CAD" -> "1.21"
-        "USD" to "JPY" -> "110"
-        "USD" to "EUR" -> "0.85"
-        "CAD" to "KRW" -> "1086"
-        "CAD" to "USD" -> "0.83"
-        "CAD" to "JPY" -> "90"
-        "CAD" to "EUR" -> "0.69"
-        "JPY" to "KRW" -> "11.9"
-        "JPY" to "USD" -> "0.0091"
-        "JPY" to "CAD" -> "0.011"
-        "JPY" to "EUR" -> "0.0076"
-        "EUR" to "KRW" -> "1428"
-        "EUR" to "USD" -> "1.18"
-        "EUR" to "CAD" -> "1.45"
-        "EUR" to "JPY" -> "131"
-        else -> "N/A"
-    }
+    val exchangeRates = viewModel.currencyValues.collectAsState().value
+
+    val exchangeRate = exchangeRates[toCurrency]
 
     Text(
-        text = "1$fromCurrency = $exchangeRate$toCurrency",
+        text = if (exchangeRate != null) {
+            "1 $fromCurrency = $exchangeRate $toCurrency"
+        } else {
+            "환율 정보를 불러올 수 없습니다"
+        },
         fontSize = 16.sp,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .background(colorResource(id = R.color.snow))
     )
 }
@@ -321,7 +305,11 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                             val selectedCurrency = viewModel.selectedCurrency.value
                             when (item) {
                                 "C" -> viewModel.resetAllCurrencyValues()
-                                "=" -> viewModel.convertCurrency(viewModel.currencies.value[0], viewModel.currencies.value[1])
+                                "=" -> if (viewModel.currencies.value.size >= 2) {
+                                    val fromCurrency = viewModel.currencies.value[0]
+                                    val toCurrency = viewModel.currencies.value[1]
+                                    viewModel.convertCurrency(fromCurrency, toCurrency)
+                                }
                                 else -> {
                                     val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
                                     val newValue = if (currentValue == "0") item else currentValue + item

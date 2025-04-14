@@ -1,17 +1,21 @@
 package com.example.currency.ViewModel
 
-import androidx.compose.runtime.State
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.currency.API.RetrofitClient
+import com.example.currency.BuildConfig
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class CurrencyViewModel : ViewModel() {
     var currencies = mutableStateOf(listOf("KRW", "USD"))
         private set
 
-    private val _currencyValues = mutableStateOf(
-        currencies.value.associateWith { "0" }
-    )
-    val currencyValues: State<Map<String, String>> = _currencyValues
+    private val _currencyValues = MutableStateFlow<Map<String, String>>(emptyMap())
+    val currencyValues: MutableStateFlow<Map<String, String>> = _currencyValues
 
     var selectedCurrency = mutableStateOf(currencies.value.firstOrNull() ?: "KRW")
         private set
@@ -49,34 +53,36 @@ class CurrencyViewModel : ViewModel() {
     }
 
     fun convertCurrency(fromCurrency: String, toCurrency: String) {
-        val exchangeRate = when (fromCurrency to toCurrency) {
-            "KRW" to "USD" -> 0.00075
-            "KRW" to "CAD" -> 0.00092
-            "KRW" to "JPY" -> 0.084
-            "KRW" to "EUR" -> 0.0007
-            "USD" to "KRW" -> 1330.0
-            "USD" to "CAD" -> 1.21
-            "USD" to "JPY" -> 110.0
-            "USD" to "EUR" -> 0.85
-            "CAD" to "KRW" -> 1086.0
-            "CAD" to "USD" -> 0.83
-            "CAD" to "JPY" -> 90.0
-            "CAD" to "EUR" -> 0.69
-            "JPY" to "KRW" -> 11.9
-            "JPY" to "USD" -> 0.0091
-            "JPY" to "CAD" -> 0.011
-            "JPY" to "EUR" -> 0.0076
-            "EUR" to "KRW" -> 1428.0
-            "EUR" to "USD" -> 1.18
-            "EUR" to "CAD" -> 1.45
-            "EUR" to "JPY" -> 131.0
-            else -> null
-        }
+        val exchangeRate = currencyValues.value[toCurrency]?.toDoubleOrNull()
 
         exchangeRate?.let {
-            val fromValue = currencyValues.value.getOrDefault(fromCurrency, "0").toDoubleOrNull() ?: 0.0
+            val fromValue = currencyValues.value[fromCurrency]?.toDoubleOrNull() ?: 0.0
             val convertedValue = fromValue * it
             updateCurrencyValue(toCurrency, String.format("%.2f", convertedValue))
+        }
+    }
+
+    val _availableCountries = MutableStateFlow<List<String>>(emptyList())
+    val availableCountries: StateFlow<List<String>> = _availableCountries
+
+    fun fetchLiveRates(base: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.getRates(BuildConfig.KEY, base)
+                if (response.isSuccessful) {
+                    response.body()?.let { data ->
+                        _currencyValues.value = data.conversion_rates.mapValues {
+                            String.format("%.2f", it.value)
+                        }
+
+                        _availableCountries.value = data.conversion_rates.keys.toList()
+                    }
+                } else {
+                    Log.e("API_ERROR", "API Error: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("API_EXCEPTION", "Exception: ${e.message}")
+            }
         }
     }
 }
