@@ -26,8 +26,16 @@ class CurrencyViewModel : ViewModel() {
         }
     }
 
+    var userInputValue = mutableStateOf("0")
+        private set
+
+    fun setUserInputValue(value: String) {
+        userInputValue.value = value
+    }
+
     fun resetAllCurrencyValues() {
         _currencyValues.value = _currencyValues.value.keys.associateWith { "0" }
+        userInputValue.value = "0"
     }
 
     fun setSelectedCurrency(currency: String) {
@@ -52,16 +60,6 @@ class CurrencyViewModel : ViewModel() {
         return currencies.value.contains(currency)
     }
 
-    fun convertCurrency(fromCurrency: String, toCurrency: String) {
-        val exchangeRate = currencyValues.value[toCurrency]?.toDoubleOrNull()
-
-        exchangeRate?.let {
-            val fromValue = currencyValues.value[fromCurrency]?.toDoubleOrNull() ?: 0.0
-            val convertedValue = fromValue * it
-            updateCurrencyValue(toCurrency, String.format("%.2f", convertedValue))
-        }
-    }
-
     val _availableCountries = MutableStateFlow<List<String>>(emptyList())
     val availableCountries: StateFlow<List<String>> = _availableCountries
 
@@ -72,7 +70,7 @@ class CurrencyViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     response.body()?.let { data ->
                         _currencyValues.value = data.conversion_rates.mapValues {
-                            String.format("%.2f", it.value)
+                            String.format("%.5f", it.value)
                         }
 
                         _availableCountries.value = data.conversion_rates.keys.toList()
@@ -82,6 +80,33 @@ class CurrencyViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("API_EXCEPTION", "Exception: ${e.message}")
+            }
+        }
+    }
+
+    fun convertCurrencyWithFetch(fromCurrency: String, toCurrency: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.getRates(BuildConfig.KEY, fromCurrency)
+                if (response.isSuccessful) {
+                    response.body()?.let { data ->
+                        _currencyValues.value = _currencyValues.value.mapKeys { it.key }.mapValues { (key, _) ->
+                            data.conversion_rates[key]?.let { String.format("%.5f", it) } ?: "0"
+                        }
+
+                        val inputAmount = userInputValue.value.toDoubleOrNull() ?: 0.0
+                        val exchangeRate = data.conversion_rates[toCurrency] ?: 0.0
+                        val convertedValue = inputAmount * exchangeRate
+
+                        Log.d("CONVERT", "From: $fromCurrency ($inputAmount) ➝ To: $toCurrency (Rate: $exchangeRate)")
+
+                        updateCurrencyValue(toCurrency, String.format("%.5f", convertedValue))
+
+                        userInputValue.value = "0"
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CONVERT_ERR", "Conversion failed: ${e.message}")
             }
         }
     }

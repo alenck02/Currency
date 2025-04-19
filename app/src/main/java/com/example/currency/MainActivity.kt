@@ -83,8 +83,10 @@ fun AppNavigation(viewModel: CurrencyViewModel) {
 
 @Composable
 fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
+    val selectedCurrency by remember { viewModel.selectedCurrency }
+
     LaunchedEffect(Unit) {
-        viewModel.fetchLiveRates("USD")
+        viewModel.fetchLiveRates(selectedCurrency)
     }
 
     Column {
@@ -108,7 +110,9 @@ fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
 
 @Composable
 fun CountryItem(currency: String, navController: NavHostController, viewModel: CurrencyViewModel, addTopPadding: Boolean) {
-    val currencyValue = viewModel.currencyValues.value[currency] ?: "0"
+    val currencyValues by viewModel.currencyValues.collectAsState()
+
+    val currencyValue = currencyValues[currency] ?: "0"
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val itemHeight = screenHeight * 0.2f
@@ -308,12 +312,13 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                                 "=" -> if (viewModel.currencies.value.size >= 2) {
                                     val fromCurrency = viewModel.currencies.value[0]
                                     val toCurrency = viewModel.currencies.value[1]
-                                    viewModel.convertCurrency(fromCurrency, toCurrency)
+                                    viewModel.convertCurrencyWithFetch(fromCurrency, toCurrency)
                                 }
                                 else -> {
-                                    val currentValue = viewModel.currencyValues.value[selectedCurrency] ?: "0"
-                                    val newValue = if (currentValue == "0") item else currentValue + item
-                                    viewModel.updateCurrencyValue(selectedCurrency, newValue)
+                                    val currentInput = viewModel.userInputValue.value
+                                    val newInput = if (currentInput == "0") item else currentInput + item
+                                    viewModel.setUserInputValue(newInput)
+                                    viewModel.updateCurrencyValue(selectedCurrency, newInput)
                                 }
                             }
                         }
