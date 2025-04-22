@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class CurrencyViewModel : ViewModel() {
     var currencies = mutableStateOf(listOf("KRW", "USD"))
-        private set
+    private set
 
     private val _exchangeRates = MutableStateFlow<Map<String, Double>>(emptyMap())
     val exchangeRates: StateFlow<Map<String, Double>> = _exchangeRates
@@ -74,9 +74,7 @@ class CurrencyViewModel : ViewModel() {
                     response.body()?.let { data ->
                         _exchangeRates.value = data.conversion_rates
 
-                        _currencyValues.value = data.conversion_rates.mapValues {
-                            String.format("%.5f", it.value)
-                        }
+                        _currencyValues.value = data.conversion_rates.mapValues { "0" }
 
                         _availableCountries.value = data.conversion_rates.keys.toList()
                     }
@@ -97,15 +95,9 @@ class CurrencyViewModel : ViewModel() {
                     response.body()?.let { data ->
                         _exchangeRates.value = data.conversion_rates
 
-                        _currencyValues.value = _currencyValues.value.mapKeys { it.key }.mapValues { (key, _) ->
-                            data.conversion_rates[key]?.let { String.format("%.5f", it) } ?: "0"
-                        }
-
                         val inputAmount = userInputValue.value.toDoubleOrNull() ?: 0.0
                         val exchangeRate = data.conversion_rates[toCurrency] ?: 0.0
                         val convertedValue = inputAmount * exchangeRate
-
-                        Log.d("CONVERT", "From: $fromCurrency ($inputAmount) ➝ To: $toCurrency (Rate: $exchangeRate)")
 
                         updateCurrencyValue(toCurrency, String.format("%.5f", convertedValue))
                     }
