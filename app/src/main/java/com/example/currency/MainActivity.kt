@@ -155,6 +155,7 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+            .padding(bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
     ) {
         Row {
             var lastClickTime by remember { mutableStateOf(0L) }
