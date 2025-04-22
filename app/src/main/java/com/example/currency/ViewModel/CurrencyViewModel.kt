@@ -14,8 +14,11 @@ class CurrencyViewModel : ViewModel() {
     var currencies = mutableStateOf(listOf("KRW", "USD"))
         private set
 
+    private val _exchangeRates = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val exchangeRates: StateFlow<Map<String, Double>> = _exchangeRates
+
     private val _currencyValues = MutableStateFlow<Map<String, String>>(emptyMap())
-    val currencyValues: MutableStateFlow<Map<String, String>> = _currencyValues
+    val currencyValues: StateFlow<Map<String, String>> = _currencyValues
 
     var selectedCurrency = mutableStateOf(currencies.value.firstOrNull() ?: "KRW")
         private set
@@ -69,6 +72,8 @@ class CurrencyViewModel : ViewModel() {
                 val response = RetrofitClient.api.getRates(BuildConfig.KEY, base)
                 if (response.isSuccessful) {
                     response.body()?.let { data ->
+                        _exchangeRates.value = data.conversion_rates
+
                         _currencyValues.value = data.conversion_rates.mapValues {
                             String.format("%.5f", it.value)
                         }
@@ -90,6 +95,8 @@ class CurrencyViewModel : ViewModel() {
                 val response = RetrofitClient.api.getRates(BuildConfig.KEY, fromCurrency)
                 if (response.isSuccessful) {
                     response.body()?.let { data ->
+                        _exchangeRates.value = data.conversion_rates
+
                         _currencyValues.value = _currencyValues.value.mapKeys { it.key }.mapValues { (key, _) ->
                             data.conversion_rates[key]?.let { String.format("%.5f", it) } ?: "0"
                         }
@@ -101,8 +108,6 @@ class CurrencyViewModel : ViewModel() {
                         Log.d("CONVERT", "From: $fromCurrency ($inputAmount) ➝ To: $toCurrency (Rate: $exchangeRate)")
 
                         updateCurrencyValue(toCurrency, String.format("%.5f", convertedValue))
-
-                        userInputValue.value = "0"
                     }
                 }
             } catch (e: Exception) {

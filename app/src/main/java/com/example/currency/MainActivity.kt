@@ -111,8 +111,11 @@ fun uiPreview(navController: NavHostController, viewModel: CurrencyViewModel) {
 @Composable
 fun CountryItem(currency: String, navController: NavHostController, viewModel: CurrencyViewModel, addTopPadding: Boolean) {
     val currencyValues by viewModel.currencyValues.collectAsState()
+    val selectedCurrency by viewModel.selectedCurrency
+    val userInputValue by viewModel.userInputValue
 
-    val currencyValue = currencyValues[currency] ?: "0"
+    val isSelected = selectedCurrency == currency
+    val displayValue = if (isSelected) userInputValue else currencyValues[currency] ?: "0"
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val itemHeight = screenHeight * 0.2f
@@ -135,7 +138,7 @@ fun CountryItem(currency: String, navController: NavHostController, viewModel: C
             fontSize = 28.sp
         )
         Text(
-            text = currencyValue,
+            text = displayValue,
             fontSize = 28.sp
         )
     }
@@ -246,16 +249,22 @@ fun currencyInfo(viewModel: CurrencyViewModel) {
     val fromCurrency = currencies.getOrNull(0) ?: "KRW"
     val toCurrency = currencies.getOrNull(1) ?: "USD"
 
-    val exchangeRates = viewModel.currencyValues.collectAsState().value
-
+    val exchangeRates = viewModel.exchangeRates.collectAsState().value
     val exchangeRate = exchangeRates[toCurrency]
 
-    Text(
-        text = if (exchangeRate != null) {
-            "1 $fromCurrency = $exchangeRate $toCurrency"
+    val displayText = if (exchangeRate != null) {
+        if (exchangeRate < 0.01) {
+            val adjusted = exchangeRate * 1000
+            "1000 $fromCurrency = ${String.format("%.5f", adjusted)} $toCurrency"
         } else {
-            "환율 정보를 불러올 수 없습니다"
-        },
+            "1 $fromCurrency = ${String.format("%.5f", exchangeRate)} $toCurrency"
+        }
+    } else {
+        "환율 정보를 불러올 수 없습니다"
+    }
+
+    Text(
+        text = displayText,
         fontSize = 16.sp,
         textAlign = TextAlign.Center,
         modifier = Modifier
@@ -308,13 +317,20 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                         is String -> createButton(text = item) {
                             val selectedCurrency = viewModel.selectedCurrency.value
                             when (item) {
-                                "C" -> viewModel.resetAllCurrencyValues()
-                                "=" -> if (viewModel.currencies.value.size >= 2) {
+                                "C" -> {
+                                    viewModel.resetAllCurrencyValues()
+                                    viewModel.setUserInputValue("0")
+
+                                    if (viewModel.currencies.value.size >= 2) {
+                                        val fromCurrency = viewModel.currencies.value[0]
+                                        val toCurrency = viewModel.currencies.value[1]
+                                        viewModel.convertCurrencyWithFetch(fromCurrency, toCurrency)
+                                    }
+                                } "=" -> if (viewModel.currencies.value.size >= 2) {
                                     val fromCurrency = viewModel.currencies.value[0]
                                     val toCurrency = viewModel.currencies.value[1]
                                     viewModel.convertCurrencyWithFetch(fromCurrency, toCurrency)
-                                }
-                                else -> {
+                                } else -> {
                                     val currentInput = viewModel.userInputValue.value
                                     val newInput = if (currentInput == "0") item else currentInput + item
                                     viewModel.setUserInputValue(newInput)
@@ -333,6 +349,12 @@ fun NumberButtons(viewModel: CurrencyViewModel) {
                                 R.drawable.swap -> if (viewModel.currencies.value.size >= 2) {
                                     viewModel.swapCurrencies(viewModel.currencies.value[0], viewModel.currencies.value[1])
                                     viewModel.updateCurrencyValue(viewModel.currencies.value[0], "0")
+
+                                    if (viewModel.currencies.value.size >= 2) {
+                                        val fromCurrency = viewModel.currencies.value[0]
+                                        val toCurrency = viewModel.currencies.value[1]
+                                        viewModel.convertCurrencyWithFetch(fromCurrency, toCurrency)
+                                    }
                                 }
                             }
                         }
