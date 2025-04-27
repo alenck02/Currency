@@ -170,6 +170,7 @@ class CurrencyViewModel : ViewModel() {
         "WST" to "사모아",
         "XAF" to "중앙아프리카 CFA",
         "XCD" to "동카리브 달러",
+        "XCG" to "카리브 길더",
         "XDR" to "특별인출권",
         "XOF" to "서아프리카 CFA",
         "XPF" to "CFP 프랑",
