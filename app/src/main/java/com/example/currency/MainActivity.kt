@@ -194,12 +194,18 @@ fun CountrySelectionScreen(navController: NavHostController, viewModel: Currency
         }
 
         val filteredCountries = countryList
-            .filter { it.contains(searchQuery, ignoreCase = true) }
-            .sorted()
+            .filter { currencyCode ->
+                val countryName = viewModel.currencyToCountryName[currencyCode] ?: currencyCode
+                countryName.contains(searchQuery, ignoreCase = true) || currencyCode.contains(searchQuery, ignoreCase = true)
+            }
+            .sortedBy { currencyCode ->
+                viewModel.currencyToCountryName[currencyCode] ?: currencyCode
+            }
 
         LazyColumn {
             items(filteredCountries) { currencyCode ->
-                CountryRow(currencyCode, currencyCode) {
+                val countryName = viewModel.currencyToCountryName[currencyCode] ?: currencyCode
+                CountryRow(countryName, currencyCode) {
                     if (viewModel.canSwap(currencyCode)) {
                         viewModel.swapCurrencies(currencyToReplace, currencyCode)
                         viewModel.updateCurrencyValue(viewModel.currencies.value[0], "0")
